@@ -32,8 +32,8 @@ public class MouseEventFactory extends GameEventFactory{
 			newEvt.y = o.readFloat();
 			newEvt.xvel = o.readFloat();
 			newEvt.yvel = o.readFloat();
-			newEvt.xacc = o.readFloat();
-			newEvt.yacc = o.readFloat();
+			newEvt.xdest = o.readFloat();
+			newEvt.ydest = o.readFloat();
 		} else{
 			newEvt.isPositionEvent=true;
 			newEvt.identifier = o.readInt();
@@ -55,8 +55,8 @@ public class MouseEventFactory extends GameEventFactory{
 			o.writeFloat(e.y);
 			o.writeFloat(e.xvel);
 			o.writeFloat(e.yvel);
-			o.writeFloat(e.xacc);
-			o.writeFloat(e.yacc);
+			o.writeFloat(e.xdest);
+			o.writeFloat(e.xdest);
 		} else{
 			o.writeFloat(e.x);
 			o.writeFloat(e.y);

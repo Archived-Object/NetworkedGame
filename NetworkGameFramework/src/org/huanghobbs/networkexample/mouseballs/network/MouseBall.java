@@ -8,56 +8,50 @@ package org.huanghobbs.networkexample.mouseballs.network;
 public class MouseBall {
 	
 	public static final float correctionFactor =2.0F; //higher = faster correction to server value.
-
-	public boolean controlledLocal = false;
 	
 	public int identifier;
-	public float px, py, pxv, pyv, pxa, pya; //display predicted physics variables (locally determined)
-	public float sx, sy, sxv, syv; //server based predicted physics variables (server-determined)
+	public float x, y, xv, yv; //physics
+	public float xs, ys; //where server is
+	public float xd, yd; //where go
 	
-	public MouseBall(int x, int y, boolean controlledLocal){
-		this.px=x;
-		this.py=y;
-		this.sx=px;
-		this.sy=py;
-		this.controlledLocal = controlledLocal;
+	public MouseBall(int x, int y){
+		this.x=x;
+		this.y=y;
 	}
 	
 	public MouseBall(MouseEvent e) {
-		this.px=e.x;
-		this.py=e.y;
-		this.pxv=e.xvel;
-		this.pyv=e.yvel;
-		this.pxa=e.xacc;
-		this.pya=e.yacc;
-		//==
-		this.sx=e.x;
-		this.sy=e.y;
-		//==
+		this.xs=e.x;
+		this.ys=e.y;
+		this.xv=e.xvel;
+		this.yv=e.yvel;
+		this.xd=e.xdest;
+		this.yd=e.ydest;
 		this.identifier=e.identifier;
 	}
 
 	public void update(int elapsed){
-		//updating local prediction based on PHYSICS
-		this.pxv+=pxa;
-		this.pyv+=pya;
-		this.px+=pxv;
-		this.py+=pyv;
+		//updating local prediction
+
+		this.xv += (this.xd-this.x)/100;
+		this.yv += (this.yd-this.y)/100;
 		
-		//updating more correct local prediction based on PHYSICS
-		this.sx+=sxv;
-		this.sy+=sxv;
+		this.x+=xv;
+		this.y+=yv;
+		this.xd+=xv;
+		this.yd+=yv;
 		
-		//correcting display to match server
-		this.px = this.px + (this.sx - this.px)*(correctionFactor)*elapsed/1000;
-		this.py = this.py + (this.sy - this.py)*(correctionFactor)*elapsed/1000;
+		//correcting display to match server over time
+		this.x = this.x + (this.xs - this.x)*(correctionFactor)*elapsed/1000;
+		this.y = this.y + (this.ys - this.y)*(correctionFactor)*elapsed/1000;
 	}
 	
-	public void updateFromServer(MouseEvent pev2d){
-		this.sx  = pev2d.x;
-		this.sy  = pev2d.y;
-		this.pxv = pev2d.xvel;
-		this.pyv = pev2d.yvel;
+	public void updateFromServer(MouseEvent mev){
+		if(!mev.isPositionEvent){
+			this.xv = mev.xvel;
+			this.yv = mev.yvel;
+			this.xd = mev.xdest;
+			this.yd = mev.ydest;
+		}
 	}
 
 }

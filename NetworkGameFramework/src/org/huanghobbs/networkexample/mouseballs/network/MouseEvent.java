@@ -5,7 +5,7 @@ import org.huanghobbs.networkframe.GameEvent;
 public class MouseEvent implements GameEvent{
 	
 	public int identifier;
-	public float x, y, xvel, yvel, xacc, yacc;
+	public float x, y, xvel, yvel, xdest, ydest;
 	public boolean isPositionEvent;
 	
 	public MouseEvent(){}
@@ -19,12 +19,12 @@ public class MouseEvent implements GameEvent{
 	
 	public MouseEvent(MouseBall o){
 		this.isPositionEvent=false;
-		this.x=o.px;
-		this.y=o.py;
-		this.xvel=o.pxv;
-		this.yvel=o.pyv;
-		this.xacc=o.pxa;
-		this.yacc=o.pya;
+		this.x=o.x;
+		this.y=o.y;
+		this.xvel=o.xv;
+		this.yvel=o.yv;
+		this.xdest=o.xd;
+		this.ydest=o.yd;
 		
 		this.identifier = o.identifier;
 	}

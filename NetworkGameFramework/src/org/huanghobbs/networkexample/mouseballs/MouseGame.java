@@ -61,7 +61,7 @@ public class MouseGame extends BasicGame {
     		}else{
     	    	g.setColor(Color.gray);
     		}
-    		g.fillOval(o.px-5, o.py-5, 10, 10);
+    		g.fillOval(o.x-5, o.y-5, 10, 10);
     	}
     	manager.releaseVariable("objects");
     }
@@ -169,19 +169,13 @@ class MouseServer extends ServerGameplay<MouseEvent>{
 	@Override
 	public boolean handleEvent(MouseEvent e, WrappedClient<MouseEvent> source) {
 		if(e.identifier==source.identifier && e.isPositionEvent){
-			MouseBall target = null;
 			this.checkOutVariable("gameObjects");
 			for(int i=0; i<this.mouseBalls.size(); i++){
 				if(this.mouseBalls.get(i).identifier == e.identifier){
-					target = this.mouseBalls.get(i);
+					this.mouseBalls.get(i).updateFromServer(e);
 					break;
 				}
 			}
-			if(target!=null){
-				target.pxa = (e.x-target.px)/100;
-				target.pya = (e.y-target.py)/100;
-			}
-			this.releaseVariable("gameObjects");
 		}
 		return false;
 	}
@@ -200,7 +194,7 @@ class MouseServer extends ServerGameplay<MouseEvent>{
 	@Override
 	public void onConnect(WrappedClient<MouseEvent> justConnected) {
 		this.checkOutVariable("gameObjects");
-		MouseBall o = new MouseBall(0,0,true);//spawn a new object when someone connects
+		MouseBall o = new MouseBall(0,0);//spawn a new object when someone connects
 		o.identifier = justConnected.identifier;
 		this.mouseBalls.add(o);
 
