@@ -58,7 +58,7 @@ public class ServerNetwork<G extends GameEvent>{
 				WrappedClient<G> w = new WrappedClient<G>(serverSocket.accept());
 				w.informClient();
 	            this.clients.add( w );
-	            new ClientReader<G>(this, w).start();
+	            new ClientReader<G>(this, w).start();	            
 	            this.serverGameplay.onConnect(w);
 	            
 	        } catch (IOException e) {

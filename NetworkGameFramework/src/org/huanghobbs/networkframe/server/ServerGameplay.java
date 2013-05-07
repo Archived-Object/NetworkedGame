@@ -4,6 +4,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.huanghobbs.networkframe.GameEvent;
+import org.huanghobbs.networkframe.SynchronizedSimulation;
 
 
 /**
@@ -13,7 +14,7 @@ import org.huanghobbs.networkframe.GameEvent;
  * @author Maxwell
  *
  */
-public abstract class ServerGameplay<G extends GameEvent>{
+public abstract class ServerGameplay<G extends GameEvent> extends SynchronizedSimulation{
 	
 	/** Static variable to control game universe "tick" speed*/
 	protected static int universeTickTime = 30;

@@ -37,6 +37,8 @@ public class GameObject {
 		this.syv=e.yvel;
 		this.sxa=e.xacc;
 		this.sya=e.yacc;
+		//==
+		this.identifier=e.identifier;
 	}
 
 	public void update(int elapsed){

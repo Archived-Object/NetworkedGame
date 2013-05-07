@@ -48,8 +48,8 @@ public class MouseGame extends BasicGame {
  
     @Override
     public void render(GameContainer gc, Graphics g) throws SlickException {
-    	g.setColor(Color.black);
-    	g.fillRect(0,0,gc.getWidth(),gc.getHeight());
+    	
+    	manager.checkOutVariable("objects");
     	for(GameObject o: manager.objects){
     		if(o.identifier==this.manager.network.identifier){
     	    	g.setColor(Color.cyan);
@@ -58,6 +58,7 @@ public class MouseGame extends BasicGame {
     		}
     		g.fillOval(o.px-5, o.py-5, 10, 10);
     	}
+    	manager.releaseVariable("objects");
     }
    
     public static void main(String[] args) throws SlickException {
@@ -90,6 +91,8 @@ public class MouseGame extends BasicGame {
 	        app.setSmoothDeltas(true);
 	        app.setTargetFrameRate(fpslimit);
 	        app.setShowFPS(showFPS);
+	        
+	        System.out.println("STARTING APP");
 	        app.start();
     	}
     }
@@ -114,9 +117,11 @@ class MouseClient extends ClientSimulation<PhysicsEvent2D>{
 	
 	@Override
 	public void tickSimulation(){
+		this.checkOutVariable("objects");
 		for(GameObject object: objects){
 			object.update(elapsed);//predict the positions of all the objects
 		}
+		this.releaseVariable("objects");
 	}
 
 	@Override
@@ -124,6 +129,7 @@ class MouseClient extends ClientSimulation<PhysicsEvent2D>{
 	 * applies an event from the parent simulation
 	 */
 	public void handleEvent(PhysicsEvent2D e) {
+		this.checkOutVariable("objects");
 		boolean handled=false;
 		for(int i=0; i<this.objects.size(); i++){
 			if(this.objects.get(i).identifier == e.identifier){
@@ -135,6 +141,7 @@ class MouseClient extends ClientSimulation<PhysicsEvent2D>{
 		if(!handled){
 			this.objects.add(new GameObject(e));
 		}
+		this.releaseVariable("objects");
 	}
 	
 } 
@@ -158,42 +165,57 @@ class MouseServer extends ServerGameplay<PhysicsEvent2D>{
 	public boolean handleEvent(PhysicsEvent2D e, WrappedClient<PhysicsEvent2D> source) {
 		if(e.identifier==source.identifier && e.isPositionEvent){
 			GameObject target = null;
+			this.checkOutVariable("gameObjects");
 			for(int i=0; i<this.gameObjects.size(); i++){
 				if(this.gameObjects.get(i).identifier == e.identifier){
 					target = this.gameObjects.get(i);
 					break;
 				}
 			}
-			target.pxa = (e.x-target.px)/100;
-			target.pya = (e.y-target.py)/100;
+			if(target!=null){
+				target.pxa = (e.x-target.px)/100;
+				target.pya = (e.y-target.py)/100;
+			}
+			this.releaseVariable("gameObjects");
 		}
 		return false;
 	}
 	
 	@Override
 	public void tickUniverse(){
-		
+
+		this.checkOutVariable("gameObjects");
 		for(GameObject object: gameObjects){
 			object.update(elapsed);
 			this.network.dispatchEvent(new PhysicsEvent2D(object));
 		}
+		this.releaseVariable("gameObjects");
 	}
 
 	@Override
 	public void onConnect(WrappedClient<PhysicsEvent2D> justConnected) {
+		this.checkOutVariable("gameObjects");
 		GameObject o = new GameObject(0,0,true);//spawn a new object when someone connects
-		this.gameObjects.add(o);
 		o.identifier = justConnected.identifier;
-		this.network.dispatchEvent(new PhysicsEvent2D(o));
+		this.gameObjects.add(o);
+
+		System.out.println("new object, id "+o.identifier);
+		System.out.println("Server thinks is "+o.identifier);
+		PhysicsEvent2D e = new PhysicsEvent2D(o);
+		System.out.println(e.identifier);
+		this.network.dispatchEvent(e);
+		this.releaseVariable("gameObjects");
 	}
 
 	@Override
 	public void onDisconnect(WrappedClient<PhysicsEvent2D> justDropped) {
+		this.checkOutVariable("gameObjects");
 		for(int i=0; i<this.gameObjects.size(); i++){
 			if(this.gameObjects.get(i).identifier == justDropped.identifier){
 				this.gameObjects.remove(this.gameObjects.get(i));
 			}
 		}
+		this.releaseVariable("gameObjects");
 	}
 	
 }

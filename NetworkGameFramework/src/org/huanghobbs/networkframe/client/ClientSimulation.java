@@ -5,8 +5,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.huanghobbs.networkframe.GameEvent;
-
-
+import org.huanghobbs.networkframe.SynchronizedSimulation;
 /**
  * This handles dead reckoning. (simulating based on last update from the server)
  * This also handles recording and dispatching player actions as GameEvents
@@ -17,7 +16,7 @@ import org.huanghobbs.networkframe.GameEvent;
  * @author Maxwell
  *
  */
-public abstract class ClientSimulation<G extends GameEvent> {
+public abstract class ClientSimulation<G extends GameEvent> extends SynchronizedSimulation{
 
 	/** Static variable to control game simulation "tick" speed*/
 	protected static int simulationTickTime = 30;
@@ -31,7 +30,7 @@ public abstract class ClientSimulation<G extends GameEvent> {
 	protected boolean manualTick = false;
 	
 	/** timer*/
-	protected Timer simulationTimer = new Timer();;
+	protected Timer simulationTimer = new Timer();
 	
 	public ClientSimulation(String targetAddress){
 		this.network = new ClientNetwork<G>(targetAddress);
