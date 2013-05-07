@@ -12,6 +12,7 @@ public class PhysicsEvent2D implements GameEvent{
 	
 	public PhysicsEvent2D(int identifier, int x, int y){
 		this.isPositionEvent=true;
+		this.identifier=identifier;
 		this.x=x;
 		this.y=y;
 	}
