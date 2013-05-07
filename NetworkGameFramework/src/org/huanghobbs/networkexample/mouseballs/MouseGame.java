@@ -2,8 +2,7 @@ package org.huanghobbs.networkexample.mouseballs;
 
 import java.util.ArrayList;
 
-import org.huanghobbs.networkexample.mouseballs.network.GameObject;
-import org.huanghobbs.networkexample.mouseballs.network.PhysicsEvent2D;
+import org.huanghobbs.networkexample.mouseballs.network.MouseBall;
 import org.huanghobbs.networkexample.mouseballs.network.MouseEvent;
 import org.huanghobbs.networkframe.client.ClientSimulation;
 import org.huanghobbs.networkframe.server.ServerGameplay;
@@ -43,7 +42,7 @@ public class MouseGame extends BasicGame {
     @Override
     public void update(GameContainer gc, int delta) throws SlickException {
     	this.manager.network.sendGameEvent(
-    			new PhysicsEvent2D(
+    			new MouseEvent(
     					this.manager.network.identifier,
     					gc.getInput().getMouseX(),
     					gc.getInput().getMouseY()
@@ -56,7 +55,7 @@ public class MouseGame extends BasicGame {
     public void render(GameContainer gc, Graphics g) throws SlickException {
     	
     	manager.checkOutVariable("objects");
-    	for(GameObject o: manager.objects){
+    	for(MouseBall o: manager.objects){
     		if(o.identifier==this.manager.network.identifier){
     	    	g.setColor(Color.cyan);
     		}else{
@@ -113,9 +112,9 @@ public class MouseGame extends BasicGame {
  * @author Maxwell
  *
  */
-class MouseClient extends ClientSimulation<PhysicsEvent2D>{
+class MouseClient extends ClientSimulation<MouseEvent>{
 	
-	public ArrayList<GameObject> objects = new ArrayList<GameObject>(0);
+	public ArrayList<MouseBall> objects = new ArrayList<MouseBall>(0);
 	
 	public MouseClient(String addr){
 		super(addr);
@@ -124,7 +123,7 @@ class MouseClient extends ClientSimulation<PhysicsEvent2D>{
 	@Override
 	public void tickSimulation(){
 		this.checkOutVariable("objects");
-		for(GameObject object: objects){
+		for(MouseBall object: objects){
 			object.update(elapsed);//predict the positions of all the objects
 		}
 		this.releaseVariable("objects");
@@ -134,7 +133,7 @@ class MouseClient extends ClientSimulation<PhysicsEvent2D>{
 	/**
 	 * applies an event from the parent simulation
 	 */
-	public void handleEvent(PhysicsEvent2D e) {
+	public void handleEvent(MouseEvent e) {
 		this.checkOutVariable("objects");
 		boolean handled=false;
 		for(int i=0; i<this.objects.size(); i++){
@@ -145,7 +144,7 @@ class MouseClient extends ClientSimulation<PhysicsEvent2D>{
 			}
 		}
 		if(!handled){
-			this.objects.add(new GameObject(e));
+			this.objects.add(new MouseBall(e));
 		}
 		this.releaseVariable("objects");
 	}
@@ -158,23 +157,23 @@ class MouseClient extends ClientSimulation<PhysicsEvent2D>{
  * @author Maxwell
  *
  */
-class MouseServer extends ServerGameplay<PhysicsEvent2D>{
+class MouseServer extends ServerGameplay<MouseEvent>{
 
 	int recentDigit;
 	boolean advanced = true;
 	
-	ArrayList<GameObject> gameObjects = new ArrayList<GameObject>(0);
+	ArrayList<MouseBall> mouseBalls = new ArrayList<MouseBall>(0);
 	
 	static final float ballSpeed = 10F;
 	
 	@Override
-	public boolean handleEvent(PhysicsEvent2D e, WrappedClient<PhysicsEvent2D> source) {
+	public boolean handleEvent(MouseEvent e, WrappedClient<MouseEvent> source) {
 		if(e.identifier==source.identifier && e.isPositionEvent){
-			GameObject target = null;
+			MouseBall target = null;
 			this.checkOutVariable("gameObjects");
-			for(int i=0; i<this.gameObjects.size(); i++){
-				if(this.gameObjects.get(i).identifier == e.identifier){
-					target = this.gameObjects.get(i);
+			for(int i=0; i<this.mouseBalls.size(); i++){
+				if(this.mouseBalls.get(i).identifier == e.identifier){
+					target = this.mouseBalls.get(i);
 					break;
 				}
 			}
@@ -191,34 +190,34 @@ class MouseServer extends ServerGameplay<PhysicsEvent2D>{
 	public void tickUniverse(){
 
 		this.checkOutVariable("gameObjects");
-		for(GameObject object: gameObjects){
+		for(MouseBall object: mouseBalls){
 			object.update(elapsed);
-			this.network.dispatchEvent(new PhysicsEvent2D(object));
+			this.network.dispatchEvent(new MouseEvent(object));
 		}
 		this.releaseVariable("gameObjects");
 	}
 
 	@Override
-	public void onConnect(WrappedClient<PhysicsEvent2D> justConnected) {
+	public void onConnect(WrappedClient<MouseEvent> justConnected) {
 		this.checkOutVariable("gameObjects");
-		GameObject o = new GameObject(0,0,true);//spawn a new object when someone connects
+		MouseBall o = new MouseBall(0,0,true);//spawn a new object when someone connects
 		o.identifier = justConnected.identifier;
-		this.gameObjects.add(o);
+		this.mouseBalls.add(o);
 
 		System.out.println("new object, id "+o.identifier);
 		System.out.println("Server thinks is "+o.identifier);
-		PhysicsEvent2D e = new PhysicsEvent2D(o);
+		MouseEvent e = new MouseEvent(o);
 		System.out.println(e.identifier);
 		this.network.dispatchEvent(e);
 		this.releaseVariable("gameObjects");
 	}
 
 	@Override
-	public void onDisconnect(WrappedClient<PhysicsEvent2D> justDropped) {
+	public void onDisconnect(WrappedClient<MouseEvent> justDropped) {
 		this.checkOutVariable("gameObjects");
-		for(int i=0; i<this.gameObjects.size(); i++){
-			if(this.gameObjects.get(i).identifier == justDropped.identifier){
-				this.gameObjects.remove(this.gameObjects.get(i));
+		for(int i=0; i<this.mouseBalls.size(); i++){
+			if(this.mouseBalls.get(i).identifier == justDropped.identifier){
+				this.mouseBalls.remove(this.mouseBalls.get(i));
 			}
 		}
 		this.releaseVariable("gameObjects");
