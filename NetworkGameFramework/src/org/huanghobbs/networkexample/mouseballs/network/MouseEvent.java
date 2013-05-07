@@ -10,7 +10,7 @@ import org.huanghobbs.networkframe.GameEvent;
 import org.huanghobbs.networkframe.GameEventFactory;
 
 
-public class PhysicsEvent2DFactory extends GameEventFactory{
+public class MouseEvent extends GameEventFactory{
 
 	@Override
 	/**

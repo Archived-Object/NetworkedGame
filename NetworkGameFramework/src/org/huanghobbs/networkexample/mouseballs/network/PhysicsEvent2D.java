@@ -28,5 +28,9 @@ public class PhysicsEvent2D implements GameEvent{
 		
 		this.identifier = o.identifier;
 	}
+	
+	public String toString(){
+		return "PhysEvent "+this.identifier;
+	}
 
 }

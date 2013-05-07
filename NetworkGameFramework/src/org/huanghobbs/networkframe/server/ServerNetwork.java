@@ -1,5 +1,6 @@
 package org.huanghobbs.networkframe.server;
 
+import java.awt.Event;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -184,9 +185,10 @@ class ClientReader <F extends GameEvent> extends Thread{
 	public void run() {
 		while(true){
 			try {
-				this.s.handleEvent(this.c.getEvent(), c);
+				F e = this.c.getEvent();
+				this.s.handleEvent(e, c);
 			} catch (IOException e) {
-				System.out.println("could not make call to client, dropping them because fuck you");
+				System.err.println("could not make call to client, dropping them because fuck you");
 				e.printStackTrace();
 				break;
 			}

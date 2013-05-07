@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import org.huanghobbs.networkexample.mouseballs.network.GameObject;
 import org.huanghobbs.networkexample.mouseballs.network.PhysicsEvent2D;
-import org.huanghobbs.networkexample.mouseballs.network.PhysicsEvent2DFactory;
+import org.huanghobbs.networkexample.mouseballs.network.MouseEvent;
 import org.huanghobbs.networkframe.client.ClientSimulation;
 import org.huanghobbs.networkframe.server.ServerGameplay;
 import org.huanghobbs.networkframe.server.WrappedClient;
@@ -42,7 +42,13 @@ public class MouseGame extends BasicGame {
  
     @Override
     public void update(GameContainer gc, int delta) throws SlickException {
-    	this.manager.network.sendGameEvent(new PhysicsEvent2D( this.manager.network.identifier, gc.getInput().getMouseX(), gc.getInput().getMouseY() ));
+    	this.manager.network.sendGameEvent(
+    			new PhysicsEvent2D(
+    					this.manager.network.identifier,
+    					gc.getInput().getMouseX(),
+    					gc.getInput().getMouseY()
+    				)
+    			);
     	//send mouse position updates
     }
  
@@ -63,7 +69,7 @@ public class MouseGame extends BasicGame {
    
     public static void main(String[] args) throws SlickException {
     	//establish event protocol
-    	new PhysicsEvent2DFactory();
+    	new MouseEvent();
     	if(args.length==0){
     		args = new String[] {"-sc"};
     	}
