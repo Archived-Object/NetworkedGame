@@ -22,7 +22,7 @@ import org.huanghobbs.networkframe.GameEventFactory;
 public class ClientNetwork <G extends GameEvent>{
 	
 	/**Static behavior variables*/
-	protected static final int port = 5244;
+	protected static final int port = 1337;
 	
 	/**the simulation that the gameEvents coming in/out of this govern*/
 	protected ClientSimulation<G> simulation;

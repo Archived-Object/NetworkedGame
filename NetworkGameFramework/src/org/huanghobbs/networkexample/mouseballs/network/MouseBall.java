@@ -8,6 +8,8 @@ package org.huanghobbs.networkexample.mouseballs.network;
 public class MouseBall {
 	
 	public static final float correctionFactor =2.0F; //higher = faster correction to server value.
+	public static final float decay =0.3F; //higher = faster decay of velocity.
+
 	
 	public int identifier;
 	public float x, y, xv, yv; //physics
@@ -31,8 +33,11 @@ public class MouseBall {
 
 	public void update(int elapsed){
 		//updating local prediction
-		this.xv += (this.xd-this.x)*elapsed/100/1000;
-		this.yv += (this.yd-this.y)*elapsed/100/1000;
+		this.xv += (this.xd-this.x)/70*elapsed/1000;
+		this.yv += (this.yd-this.y)/70*elapsed/1000;
+		
+		this.xv=this.xv*(1-(decay)*elapsed/1000);
+		this.yv=this.yv*(1-(decay)*elapsed/1000);
 		
 		this.x+=xv;
 		this.y+=yv;

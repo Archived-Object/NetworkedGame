@@ -1,6 +1,5 @@
 package org.huanghobbs.networkframe.server;
 
-import java.awt.Event;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -13,7 +12,7 @@ import org.huanghobbs.networkframe.GameEvent;
 public class ServerNetwork<G extends GameEvent>{
 	
 	/**Static behavior variables*/
-	protected static final int port = 5244;
+	protected static final int port = 1337;
 	protected static final int maxclients = 5;
 	protected static final int upkeepTimer = 1000;
 	protected static final int eventTimer = 100;
