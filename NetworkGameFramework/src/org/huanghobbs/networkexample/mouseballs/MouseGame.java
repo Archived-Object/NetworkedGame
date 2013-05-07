@@ -13,6 +13,7 @@ import org.newdawn.slick.BasicGame;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
+import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
 
 /**
@@ -38,7 +39,11 @@ public class MouseGame extends BasicGame {
     }
  
     @Override
-    public void init(GameContainer gc) throws SlickException {}
+    public void init(GameContainer gc) throws SlickException {
+    	Image cursor  = new Image(2,2);
+    	cursor.setAlpha(0);
+    	gc.setMouseCursor(cursor, 0,0);
+    }
  
     @Override
     public void update(GameContainer gc, int delta) throws SlickException {
@@ -58,6 +63,8 @@ public class MouseGame extends BasicGame {
     	manager.checkOutVariable("objects");
     	for(MouseBall o: manager.objects){
     		if(o.identifier==this.manager.network.identifier){
+    	    	g.setColor(Color.white);
+    	    	g.drawLine(o.x, o.y, gc.getInput().getMouseX(), gc.getInput().getMouseY());
     	    	g.setColor(Color.cyan);
     		}else{
     	    	g.setColor(Color.gray);
