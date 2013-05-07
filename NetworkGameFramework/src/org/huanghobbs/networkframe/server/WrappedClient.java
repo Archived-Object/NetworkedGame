@@ -45,7 +45,6 @@ public class WrappedClient<G extends GameEvent> {
 	@SuppressWarnings("unchecked")
 	public synchronized G getEvent() throws IOException{
 		G g = (G) GameEventFactory.readFromStream(this.toClient.getInputStream());
-		System.out.println("read event "+this.identifier+" "+g);
 		return g;
 	}
 	

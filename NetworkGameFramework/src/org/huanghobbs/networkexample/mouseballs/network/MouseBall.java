@@ -31,14 +31,13 @@ public class MouseBall {
 
 	public void update(int elapsed){
 		//updating local prediction
-
-		this.xv += (this.xd-this.x)/100;
-		this.yv += (this.yd-this.y)/100;
+		this.xv += (this.xd-this.x)*elapsed/100/1000;
+		this.yv += (this.yd-this.y)*elapsed/100/1000;
 		
 		this.x+=xv;
 		this.y+=yv;
-		this.xd+=xv;
-		this.yd+=yv;
+		this.xs+=xv;
+		this.ys+=yv;
 		
 		//correcting display to match server over time
 		this.x = this.x + (this.xs - this.x)*(correctionFactor)*elapsed/1000;
@@ -47,11 +46,21 @@ public class MouseBall {
 	
 	public void updateFromServer(MouseEvent mev){
 		if(!mev.isPositionEvent){
+			this.xs = mev.x;
+			this.ys = mev.y;
 			this.xv = mev.xvel;
 			this.yv = mev.yvel;
 			this.xd = mev.xdest;
 			this.yd = mev.ydest;
+		} else{
+			this.xd = mev.x;
+			this.yd = mev.y;
 		}
+	}
+	
+	@Override
+	public String toString(){
+		return "Ball "+this.x+" "+ this.y+" "+this.xv+" "+ this.yv+this.xd+" "+ this.yd;
 	}
 
 }

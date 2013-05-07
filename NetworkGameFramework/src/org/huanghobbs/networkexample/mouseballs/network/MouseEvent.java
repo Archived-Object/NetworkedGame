@@ -31,7 +31,7 @@ public class MouseEvent implements GameEvent{
 	
 	@Override
 	public String toString(){
-		return "MouseEvent "+this.identifier;
+		return "MouseEvent "+this.identifier+" "+this.isPositionEvent+" "+this.x+" "+this.y;
 	}
 
 }

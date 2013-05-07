@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.huanghobbs.networkexample.mouseballs.network.MouseBall;
 import org.huanghobbs.networkexample.mouseballs.network.MouseEvent;
+import org.huanghobbs.networkexample.mouseballs.network.MouseEventFactory;
 import org.huanghobbs.networkframe.client.ClientSimulation;
 import org.huanghobbs.networkframe.server.ServerGameplay;
 import org.huanghobbs.networkframe.server.WrappedClient;
@@ -68,7 +69,8 @@ public class MouseGame extends BasicGame {
    
     public static void main(String[] args) throws SlickException {
     	//establish event protocol
-    	new MouseEvent();
+    	
+    	new MouseEventFactory();
     	if(args.length==0){
     		args = new String[] {"-sc"};
     	}
@@ -176,13 +178,13 @@ class MouseServer extends ServerGameplay<MouseEvent>{
 					break;
 				}
 			}
+			this.releaseVariable("gameObjects");
 		}
 		return false;
 	}
 	
 	@Override
 	public void tickUniverse(){
-
 		this.checkOutVariable("gameObjects");
 		for(MouseBall object: mouseBalls){
 			object.update(elapsed);
