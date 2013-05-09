@@ -60,18 +60,18 @@ public class MouseGame extends BasicGame {
     @Override
     public void render(GameContainer gc, Graphics g) throws SlickException {
     	
-    	manager.checkOutVariable("objects");
-    	for(MouseBall o: manager.objects){
-    		if(o.identifier==this.manager.network.identifier){
-    	    	g.setColor(Color.white);
-    	    	g.drawLine(o.x, o.y, gc.getInput().getMouseX(), gc.getInput().getMouseY());
-    	    	g.setColor(Color.cyan);
-    		}else{
-    	    	g.setColor(Color.gray);
-    		}
-    		g.fillOval(o.x-5, o.y-5, 10, 10);
-    	}
-    	manager.releaseVariable("objects");
+	    synchronized(this.manager.objects ){
+	    	for(MouseBall o: manager.objects){
+	    		if(o.identifier==this.manager.network.identifier){
+	    	    	g.setColor(Color.white);
+	    	    	g.drawLine(o.x, o.y, gc.getInput().getMouseX(), gc.getInput().getMouseY());
+	    	    	g.setColor(Color.cyan);
+	    		}else{
+	    	    	g.setColor(Color.gray);
+	    		}
+	    		g.fillOval(o.x-5, o.y-5, 10, 10);
+	    	}
+	    }
     }
    
     public static void main(String[] args) throws SlickException {
@@ -131,11 +131,11 @@ class MouseClient extends ClientSimulation<MouseEvent>{
 	
 	@Override
 	public void tickSimulation(){
-		this.checkOutVariable("objects");
-		for(MouseBall object: objects){
-			object.update(elapsed);//predict the positions of all the objects
+		synchronized(this.objects ){
+			for(MouseBall object: objects){
+				object.update(elapsed);//predict the positions of all the objects
+			}
 		}
-		this.releaseVariable("objects");
 	}
 
 	@Override
@@ -143,19 +143,19 @@ class MouseClient extends ClientSimulation<MouseEvent>{
 	 * applies an event from the parent simulation
 	 */
 	public void handleEvent(MouseEvent e) {
-		this.checkOutVariable("objects");
-		boolean handled=false;
-		for(int i=0; i<this.objects.size(); i++){
-			if(this.objects.get(i).identifier == e.identifier){
-				this.objects.get(i).updateFromServer(e);
-				handled=true;
-				break;
+		synchronized(this.objects ){
+			boolean handled=false;
+			for(int i=0; i<this.objects.size(); i++){
+				if(this.objects.get(i).identifier == e.identifier){
+					this.objects.get(i).updateFromServer(e);
+					handled=true;
+					break;
+				}
+			}
+			if(!handled){
+				this.objects.add(new MouseBall(e));
 			}
 		}
-		if(!handled){
-			this.objects.add(new MouseBall(e));
-		}
-		this.releaseVariable("objects");
 	}
 	
 } 
@@ -178,52 +178,52 @@ class MouseServer extends ServerGameplay<MouseEvent>{
 	@Override
 	public boolean handleEvent(MouseEvent e, WrappedClient<MouseEvent> source) {
 		if(e.identifier==source.identifier && e.isPositionEvent){
-			this.checkOutVariable("gameObjects");
-			for(int i=0; i<this.mouseBalls.size(); i++){
-				if(this.mouseBalls.get(i).identifier == e.identifier){
-					this.mouseBalls.get(i).updateFromServer(e);
-					break;
+			synchronized(this.mouseBalls){
+				for(int i=0; i<this.mouseBalls.size(); i++){
+					if(this.mouseBalls.get(i).identifier == e.identifier){
+						this.mouseBalls.get(i).updateFromServer(e);
+						break;
+					}
 				}
 			}
-			this.releaseVariable("gameObjects");
 		}
 		return false;
 	}
 	
 	@Override
 	public void tickUniverse(){
-		this.checkOutVariable("gameObjects");
-		for(MouseBall object: mouseBalls){
-			object.update(elapsed);
-			this.network.dispatchEvent(new MouseEvent(object));
+		synchronized(this.mouseBalls){
+			for(MouseBall object: mouseBalls){
+				object.update(elapsed);
+				this.network.dispatchEvent(new MouseEvent(object));
+			}
 		}
-		this.releaseVariable("gameObjects");
 	}
 
 	@Override
 	public void onConnect(WrappedClient<MouseEvent> justConnected) {
-		this.checkOutVariable("gameObjects");
-		MouseBall o = new MouseBall(0,0);//spawn a new object when someone connects
-		o.identifier = justConnected.identifier;
-		this.mouseBalls.add(o);
-
-		System.out.println("new object, id "+o.identifier);
-		System.out.println("Server thinks is "+o.identifier);
-		MouseEvent e = new MouseEvent(o);
-		System.out.println(e.identifier);
-		this.network.dispatchEvent(e);
-		this.releaseVariable("gameObjects");
+		synchronized (this.mouseBalls){
+			MouseBall o = new MouseBall(0,0);//spawn a new object when someone connects
+			o.identifier = justConnected.identifier;
+			this.mouseBalls.add(o);
+	
+			System.out.println("new object, id "+o.identifier);
+			System.out.println("Server thinks is "+o.identifier);
+			MouseEvent e = new MouseEvent(o);
+			System.out.println(e.identifier);
+			this.network.dispatchEvent(e);
+		}
 	}
 
 	@Override
 	public void onDisconnect(WrappedClient<MouseEvent> justDropped) {
-		this.checkOutVariable("gameObjects");
-		for(int i=0; i<this.mouseBalls.size(); i++){
-			if(this.mouseBalls.get(i).identifier == justDropped.identifier){
-				this.mouseBalls.remove(this.mouseBalls.get(i));
+		synchronized (this.mouseBalls){
+			for(int i=0; i<this.mouseBalls.size(); i++){
+				if(this.mouseBalls.get(i).identifier == justDropped.identifier){
+					this.mouseBalls.remove(this.mouseBalls.get(i));
+				}
 			}
 		}
-		this.releaseVariable("gameObjects");
 	}
 	
 }
