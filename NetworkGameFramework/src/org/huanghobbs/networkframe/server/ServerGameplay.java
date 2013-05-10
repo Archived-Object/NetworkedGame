@@ -74,8 +74,8 @@ public abstract class ServerGameplay<G extends GameEvent>{
 	}
 
 	public abstract void onConnect(WrappedClient<G> justConnected);
-	public abstract void onDisconnect(WrappedClient<G> justConnected);
-	
+	public abstract void onDisconnect(WrappedClient<G> justDropped);
+	public abstract void onReconnect(WrappedClient<G> justConnected);
 	
 }
 

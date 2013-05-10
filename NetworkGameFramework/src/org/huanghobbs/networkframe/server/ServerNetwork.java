@@ -2,9 +2,8 @@ package org.huanghobbs.networkframe.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.huanghobbs.networkframe.GameEvent;
 
@@ -18,11 +17,11 @@ public class ServerNetwork<G extends GameEvent>{
 	protected static final int eventTimer = 100;
 
 	protected boolean kickDisconnected = false;
+	protected int numClients = 0;
 	
 	/**things that change*/
 	protected ServerSocket serverSocket;
 	protected ServerGameplay<G> serverGameplay = null;
-	protected Timer networkTimer;
 	protected ArrayList<WrappedClient<G>> clients = new ArrayList<WrappedClient<G>>(0);
 	
 	public boolean eventPipingFlag = false;
@@ -31,43 +30,31 @@ public class ServerNetwork<G extends GameEvent>{
 	public boolean started = false;
 
 	/**
-	 * removes disconnected clients and checks for new connections
-	 */
-	public void checkConnections(){
-		while(this.getNewClient()){} //gets all new clients until full or no new clients
-		
-		if(kickDisconnected){
-			for(int i=0; i<this.clients.size(); i++){
-				if(!this.clients.get(i).isConnected()){
-					this.clients.remove(i);
-				}
-			}
-		}
-	}
-	
-	/**
 	 * checks to see if there is an available client, and if so, adds them.
 	 * also sets up a thread to make blocking calls to client.getEvent().
 	 * 
+	 * this method will block until a client is found.
+	 * 
 	 * @return if the client was available and accepted
 	 */
-	public boolean getNewClient(){
-		if(this.clients.size()<maxclients){
+	public void getNewClient(){
+		if(this.numClients < maxclients){
 			try {
-				
 				WrappedClient<G> w = new WrappedClient<G>(serverSocket.accept());
 				w.informClient();
-	            this.clients.add( w );
-	            new ClientReader<G>(this, w).start();	            
-	            this.serverGameplay.onConnect(w);
-	            
-	        } catch (IOException e) {
-	        	return false;
-	        }
-		} else{
-			return false;
+				synchronized(this.clients){
+					this.clients.add( w );
+					new ClientReader<G>(this, w).start();	            
+					this.serverGameplay.onConnect(w);
+				}
+				numClients++;
+				
+			} catch (SocketException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-		return true;
 	}
 	
 	
@@ -85,14 +72,8 @@ public class ServerNetwork<G extends GameEvent>{
 	 */
 	public void dispatchEvent(G event){
 		for(int i=0; i<this.clients.size(); i++){
-			if(this.clients.get(i).isConnected()){
-				if(this.clients.get(i).sendEvent(event)){//try to send event, on disconnect, execute this code
-					this.serverGameplay.onDisconnect(this.clients.get(i));
-					if(this.kickDisconnected){
-						this.clients.remove(i);
-						i--;
-					}
-				}
+			if(!this.clients.get(i).disconnected){
+				this.clients.get(i).sendEvent(event); //try to send event
 			}
 		}
 	}
@@ -104,13 +85,28 @@ public class ServerNetwork<G extends GameEvent>{
 	 * @param event the game event you want to send
 	 * @throws IOException 
 	 */
-	public void handleEvent(G e, WrappedClient<G> c) throws IOException{
+	public void handleEvent(G e, WrappedClient<G> c){
 		if(this.serverGameplay.handleEvent(e,c)){
 			this.dispatchEvent(e);
 		}
 	}
 	
-	
+	/**
+	 * marks a client as disconnected, and tells the serverGameplay about it
+	 * will remove them if that behavior is specified in static defining variables.
+	 * @param c
+	 */
+	public void handleDisconnect(WrappedClient<G> c){
+		c.disconnected=true;
+		serverGameplay.onDisconnect(c);
+		
+		if(this.kickDisconnected){
+			synchronized(this.clients){
+				this.clients.remove(c);
+				this.numClients--;
+			}
+		}
+	}
 	
 	/**
 	 * the setup function of the networked server.
@@ -120,16 +116,16 @@ public class ServerNetwork<G extends GameEvent>{
 		
 		try { //setting up client connections
 			this.serverSocket= new ServerSocket(port);
+			this.serverSocket.setSoTimeout(0);
+			new ConnectionListener<G>(this).start();
+			this.started=true;
+			
 		} catch (IOException e1) {
             System.err.println("Could not listen on port "+port);
             e1.printStackTrace();
             System.exit(-1);
 		}
 		
-		this.networkTimer = new Timer();
-		this.networkTimer.scheduleAtFixedRate(new NetworkMaintenenceTimer<G>(this), 0, upkeepTimer);	
-		
-		this.started=true;
 	}
 	
 }
@@ -143,21 +139,23 @@ public class ServerNetwork<G extends GameEvent>{
  * 
  * @author Maxwell
  */
-class NetworkMaintenenceTimer<O extends GameEvent> extends TimerTask{
+class ConnectionListener<O extends GameEvent> extends Thread{
 
 	/** the ServerNetwork to command*/
 	protected ServerNetwork<O> s;
 	
-	public NetworkMaintenenceTimer(ServerNetwork<O> s){
+	public ConnectionListener(ServerNetwork<O> s){
 		this.s = s;
 	}
 	
 	@Override
 	/*
-	 * accepts clients until there are no more, or the server cannot take any more clients.
+	 * sends unending, blocking calls co accept new clients.
 	 */
 	public void run() {
-		s.checkConnections();
+		while(true){
+			s.getNewClient();
+		}
 	}
 }
 
@@ -183,12 +181,14 @@ class ClientReader <F extends GameEvent> extends Thread{
 	 */
 	public void run() {
 		while(true){
-			try {
-				F e = this.c.getEvent();
+
+			F e = this.c.getEvent();
+			if(e!=null){
 				this.s.handleEvent(e, c);
-			} catch (IOException e) {
-				System.err.println("could not make call to client, dropping them because fuck you");
-				e.printStackTrace();
+			}
+			else{
+				System.err.println("could not make call to client, dropping their update loop because fuck you");
+				s.handleDisconnect(c);
 				break;
 			}
 		}

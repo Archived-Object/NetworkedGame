@@ -71,6 +71,11 @@ public class ExampleNetworkGame {
 		public void onDisconnect(WrappedClient<IntGameEvent> justConnected) {
 			//do nothing on disconnect
 		}
+
+		@Override
+		public void onReconnect(WrappedClient<IntGameEvent> justConnected) {
+			//do nothing on reconnect
+		}
 		
 	}
 	
@@ -124,6 +129,22 @@ public class ExampleNetworkGame {
 		 */
 		public void handleEvent(IntGameEvent e) {
 			System.out.println(e.value +" recieved from server");
+		}
+
+		/**
+		 * does nothing
+		 */
+		@Override
+		public void onDisconnect() {
+			
+		}
+
+		/**
+		 * does nothing
+		 */
+		@Override
+		public void onReconnect() {
+			
 		}
 		
 	} 

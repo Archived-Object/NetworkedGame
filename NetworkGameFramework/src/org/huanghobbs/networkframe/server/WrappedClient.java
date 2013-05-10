@@ -23,6 +23,7 @@ public class WrappedClient<G extends GameEvent> {
 	static int counter = 0;
 	
 	public int identifier;
+	public boolean disconnected = false;
 	
 	public WrappedClient(Socket s) throws SocketException{
 		this.toClient=s;
@@ -43,9 +44,15 @@ public class WrappedClient<G extends GameEvent> {
 	 * @throws IOException 
 	 */
 	@SuppressWarnings("unchecked")
-	public synchronized G getEvent() throws IOException{
-		G g = (G) GameEventFactory.readFromStream(this.toClient.getInputStream());
-		return g;
+	public synchronized G getEvent(){
+		try{
+			G g = (G) GameEventFactory.readFromStream(this.toClient.getInputStream());
+			return g;
+		} catch(IOException e){
+			System.err.println("cannot read event from client");
+			//e.printStackTrace();
+			return null;
+		}
 	}
 	
 
@@ -60,25 +67,15 @@ public class WrappedClient<G extends GameEvent> {
 			GameEventFactory.writeToStream(event,this.toClient.getOutputStream());
 		} catch(IOException e){
 			System.out.println("cannot write event to outputstram");
-			e.printStackTrace();
 			
 			try {
 				this.toClient.close();
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			return true;
 		}
 		return false;
-	}
-	
-	/**
-	 * 
-	 * @return if the client is connected
-	 */
-	public boolean isConnected(){
-		return this.toClient!=null && this.toClient.isConnected();
 	}
 
 }

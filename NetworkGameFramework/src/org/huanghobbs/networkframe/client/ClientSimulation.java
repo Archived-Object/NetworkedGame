@@ -62,6 +62,18 @@ public abstract class ClientSimulation<G extends GameEvent>{
 	 * handle a GameEvent (update the simulation and apply dead-reckoning to figure out what should be going on)
 	 */
 	public abstract void handleEvent(G e);
+
+	/**
+	 * abstract method
+	 * handles a disconnect from the parent server
+	 */
+	public abstract void onDisconnect();
+	
+	/**
+	 * abstract method
+	 * handles a reconnect to the parent server.
+	 */
+	public abstract void onReconnect();
 	
 	class SimulationTicker<O extends GameEvent> extends TimerTask{
 
@@ -77,5 +89,6 @@ public abstract class ClientSimulation<G extends GameEvent>{
 		}
 		
 	}
+
 	
 }

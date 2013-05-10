@@ -32,6 +32,8 @@ public class ClientNetwork <G extends GameEvent>{
 	protected Socket socket;
 	protected String address;
 	
+	protected boolean hasConnected=false;
+	
 	public int identifier;
 	
 	public ClientNetwork(String address){
@@ -64,6 +66,7 @@ public class ClientNetwork <G extends GameEvent>{
 		} catch (IOException e) {
 			System.err.println("ClientNetwork could not read GameEvent. What is going on?");
 			e.printStackTrace();
+			this.simulation.onDisconnect();
 			return null;
 		}
 	}
@@ -79,6 +82,7 @@ public class ClientNetwork <G extends GameEvent>{
 	
 	public void start() throws IOException{
 		this.socket.connect( new InetSocketAddress(address, port) );
+		this.hasConnected=true;
 		this.identifier = this.socket.getInputStream().read();
 		this.networkThread.start();
 	}

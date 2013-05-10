@@ -31,6 +31,10 @@ public class MouseGame extends BasicGame {
     static final String title = "MOUSEGAME";
     static final int fpslimit = 60;
     
+    float opacity = 1.0F;
+    int oldx=0;
+    int oldy=0;
+    
     MouseClient manager;
     
     public MouseGame(String title, MouseClient manager) {
@@ -43,6 +47,9 @@ public class MouseGame extends BasicGame {
     	Image cursor  = new Image(2,2);
     	cursor.setAlpha(0);
     	gc.setMouseCursor(cursor, 0,0);
+    	gc.setAlwaysRender(true);
+    	oldx=gc.getInput().getMouseX();
+    	oldy=gc.getInput().getMouseY();
     }
  
     @Override
@@ -54,6 +61,13 @@ public class MouseGame extends BasicGame {
     					gc.getInput().getMouseY()
     				)
     			);
+    	opacity-=delta/750F;
+    	if( Math.abs(gc.getInput().getMouseX()-oldx)>5 || Math.abs(oldy-gc.getInput().getMouseY())>5 ){
+    		opacity=1.0F;
+    	}
+    	oldx=gc.getInput().getMouseX();
+    	oldy=gc.getInput().getMouseY();
+    	
     	//send mouse position updates
     }
  
@@ -63,8 +77,21 @@ public class MouseGame extends BasicGame {
 	    synchronized(this.manager.objects ){
 	    	for(MouseBall o: manager.objects){
 	    		if(o.identifier==this.manager.network.identifier){
-	    	    	g.setColor(Color.white);
-	    	    	g.drawLine(o.x, o.y, gc.getInput().getMouseX(), gc.getInput().getMouseY());
+	    	    	float xo = gc.getInput().getMouseX()-o.x;
+	    	    	float yo = gc.getInput().getMouseY()-o.y;
+	    	    	
+	    	    	float hyp = (float)Math.sqrt(xo*xo+yo*yo);
+	    	    	if(hyp>255){
+	    	    		hyp=255;
+	    	    	}
+	    	    	float frac = hyp/255;
+	    	    	float op = frac*opacity;
+	    	    	
+	    	    	g.setColor(new Color(op,op,op,op));
+	    	    	for(int i=1; i<=10; i++){
+	    	    		g.setLineWidth(2-i/10F);
+	    	    		g.drawLine(o.x, o.y, o.x+xo*i/10, o.y+yo*i/10);
+	    	    	}
 	    	    	g.setColor(Color.cyan);
 	    		}else{
 	    	    	g.setColor(Color.gray);
@@ -158,6 +185,17 @@ class MouseClient extends ClientSimulation<MouseEvent>{
 		}
 	}
 	
+	@Override
+	public void onDisconnect(){
+		
+	}
+	
+
+	@Override
+	public void onReconnect(){
+		
+	}
+	
 } 
 
 
@@ -217,13 +255,12 @@ class MouseServer extends ServerGameplay<MouseEvent>{
 
 	@Override
 	public void onDisconnect(WrappedClient<MouseEvent> justDropped) {
-		synchronized (this.mouseBalls){
-			for(int i=0; i<this.mouseBalls.size(); i++){
-				if(this.mouseBalls.get(i).identifier == justDropped.identifier){
-					this.mouseBalls.remove(this.mouseBalls.get(i));
-				}
-			}
-		}
+		System.out.println("Client Disconnect");
+	}
+	
+	@Override
+	public void onReconnect(WrappedClient<MouseEvent> reconnected){
+		System.out.println("Client Reconnected");
 	}
 	
 }
