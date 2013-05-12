@@ -122,7 +122,13 @@ public class ExampleNetworkGame {
 				this.advanced=true;
 			}
 		}
-
+		
+		@Override
+		public void start(){
+			super.start();
+			this.startNetwork();
+		}
+		
 		@Override
 		/**
 		 * applies an event from the parent simulation

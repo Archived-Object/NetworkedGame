@@ -1,9 +1,13 @@
 package org.huanghobbs.networkframe.client;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 
 import org.huanghobbs.networkframe.GameEvent;
 import org.huanghobbs.networkframe.GameEventFactory;
@@ -35,18 +39,37 @@ public class ClientNetwork <G extends GameEvent>{
 	protected boolean hasConnected=false;
 	
 	public int identifier;
+	protected boolean disconnected = true;
+	protected String fingerprint;
 	
 	public ClientNetwork(String address){
 		this.networkThread = new NetworkThread<G>(this);
-		this.socket = new Socket();
 		this.address = address;
 		
-		try {
-			this.socket.setSoTimeout(0);
-		} catch (SocketException e) {
-			System.err.println("could bot set socket timeout to infinite (blocking)");
-			e.printStackTrace();
+		this.fingerprint = getRandomString(16);//generates a unique fingerprint for the network part of this client.
+	}
+	
+	public boolean isConnected(){
+		return !disconnected;
+	}
+	
+	public void setFingerprint(String fingerprint){
+		this.fingerprint=fingerprint;
+	}
+	
+	/**
+	 * gets a random string of a given length
+	 * 
+	 * @param length the length of the string
+	 * @return
+	 */
+	protected String getRandomString(int length){
+		StringBuilder s = new StringBuilder();
+		Random r = new Random();
+		for(int i=0; i<length; i++){
+			s.append( (char) (Character.MIN_CODE_POINT+r.nextInt(Character.MAX_CODE_POINT-Character.MIN_CODE_POINT) ) );
 		}
+		return s.toString();
 	}
 	
 	public void setSimulation(ClientSimulation<G> c){
@@ -64,9 +87,10 @@ public class ClientNetwork <G extends GameEvent>{
 		try {
 			return (G) GameEventFactory.readFromStream(this.socket.getInputStream());
 		} catch (IOException e) {
-			System.err.println("ClientNetwork could not read GameEvent. What is going on?");
-			e.printStackTrace();
 			this.simulation.onDisconnect();
+			if(!this.disconnected){
+				this.disconnected=true;
+			}
 			return null;
 		}
 	}
@@ -81,10 +105,57 @@ public class ClientNetwork <G extends GameEvent>{
 	}
 	
 	public void start() throws IOException{
+		this.socket = new Socket();
 		this.socket.connect( new InetSocketAddress(address, port) );
-		this.hasConnected=true;
-		this.identifier = this.socket.getInputStream().read();
-		this.networkThread.start();
+		this.socket.setSoTimeout(0);
+		
+		ObjectOutputStream oos = new ObjectOutputStream(this.socket.getOutputStream());
+		ObjectInputStream ois = new ObjectInputStream(this.socket.getInputStream());
+		
+		//say if you have connected previously this session
+		oos.writeBoolean(this.hasConnected);
+		oos.flush();
+		
+		//on reconnect
+		if(this.hasConnected){
+			//say "I am this person, reconnecting"
+			oos.writeInt(this.identifier);
+			oos.flush();
+		}
+		
+		//send hashed fingerprint to server
+		MessageDigest m=null;
+		try {
+			m = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		byte[] hashedFinger = m.digest(this.fingerprint.getBytes());
+		oos.writeInt(hashedFinger.length);
+		oos.write(hashedFinger);
+		oos.flush();
+		
+		//on initial connect(){
+		if(!this.hasConnected){
+			this.identifier = ois.readInt();//get unique ID
+			System.out.println("client has id of "+this.identifier);
+			this.hasConnected=true;
+		}
+		this.disconnected=false;
+		new NetworkThread<G>(this).start();
+		
+	}
+	
+	/**
+	 * stops the network (disconnects from server)
+	 */
+	public void stop() {
+		try {
+			this.socket.close();
+			this.disconnected=true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -105,11 +176,10 @@ public class ClientNetwork <G extends GameEvent>{
 		
 		@Override
 		public void run(){
-			while(shouldRun){
+			while(shouldRun && !client.socket.isClosed()){
 				O e = client.readGameEvent();
 				if(e==null){
 					this.cleanStop();
-					//TODO handling disconnects
 				} else{
 					client.simulation.handleEvent(e);
 				}

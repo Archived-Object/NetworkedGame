@@ -41,7 +41,12 @@ public abstract class ClientSimulation<G extends GameEvent>{
 		if(!manualTick){
 			this.simulationTimer.scheduleAtFixedRate(new SimulationTicker<G>(this), 0, simulationTickTime);
 		}
-		
+	}
+	
+	/**
+	 * convenience, calls network.start with IOerror handling.
+	 */
+	public void startNetwork(){
 		try{
 			this.network.start();
 		} catch(IOException e){

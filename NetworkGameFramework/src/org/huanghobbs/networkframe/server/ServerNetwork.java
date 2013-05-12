@@ -1,8 +1,13 @@
 package org.huanghobbs.networkframe.server;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.SocketException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 import org.huanghobbs.networkframe.GameEvent;
@@ -30,6 +35,18 @@ public class ServerNetwork<G extends GameEvent>{
 	public boolean started = false;
 
 	/**
+	 * gets a client by their ID
+	 * @param id
+	 * @return
+	 */
+	protected WrappedClient<G> getClientByID(int id){
+		for(WrappedClient<G> w:this.clients){
+			if(w.identifier == id){ return w; }
+		}
+		return null;
+	}
+	
+	/**
 	 * checks to see if there is an available client, and if so, adds them.
 	 * also sets up a thread to make blocking calls to client.getEvent().
 	 * 
@@ -40,18 +57,66 @@ public class ServerNetwork<G extends GameEvent>{
 	public void getNewClient(){
 		if(this.numClients < maxclients){
 			try {
-				WrappedClient<G> w = new WrappedClient<G>(serverSocket.accept());
-				w.informClient();
-				synchronized(this.clients){
-					this.clients.add( w );
-					new ClientReader<G>(this, w).start();	            
+				Socket newConnection = serverSocket.accept();
+				
+				ObjectOutputStream oos = new ObjectOutputStream(newConnection.getOutputStream());
+				ObjectInputStream ois = new ObjectInputStream(newConnection.getInputStream());
+				
+				if(!ois.readBoolean()){//if it is a new person connecting
+					
+					//reading hashed finger, rehash and store.
+					MessageDigest m = MessageDigest.getInstance("MD5");
+					
+					int length = ois.readInt();
+					byte[] finger = new byte[length];
+					ois.read(finger,0,length);
+					
+					WrappedClient<G> w = new WrappedClient<G>(newConnection, new String(m.digest(finger)) );
+					
+					//tell user their client number
+					oos.writeInt( w.identifier );//send the client their value.
+					oos.flush();
+					
+					synchronized(this.clients){
+						this.clients.add( w );
+					}
+					System.out.println("accepting new connection, "+w.identifier);
+					numClients++;
+					new ClientReader<G>(this, w).start();	 
 					this.serverGameplay.onConnect(w);
 				}
-				numClients++;
+				else{ //otherwise if reconnect
+					WrappedClient<G> target = this.getClientByID(ois.readInt());
+					
+					int length = ois.readInt();
+					byte[] finger = new byte[length];
+					ois.read(finger,0,length);
+					
+					MessageDigest m = MessageDigest.getInstance("MD5");
+					
+					if( target.disconnected && new String(m.digest(finger)).equals(target.fingerprint)){//if the hashes match the fingerprint hash
+						target.updateSocket(newConnection);
+						new ClientReader<G>(this, target).start();	 
+						this.serverGameplay.onReconnect(target);
+						System.out.println("accepting reconnection of "+target);
+					}
+					else if (target.disconnected){
+						newConnection.close();
+						System.out.println("rejecting reconnection of "+target+", invalid confirmation");
+						System.out.println(new String(m.digest(finger))+" "+new String(target.fingerprint));
+					} else{
+						newConnection.close();
+						System.out.println("rejecting reconnection of "+target+", someone is already connected under that client");
+					}
+					
+				}
+				
 				
 			} catch (SocketException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
 				e.printStackTrace();
 			}
 		}

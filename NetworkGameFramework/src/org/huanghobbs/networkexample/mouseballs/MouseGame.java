@@ -181,8 +181,15 @@ class MouseClient extends ClientSimulation<MouseEvent>{
 			}
 			if(!handled){
 				this.objects.add(new MouseBall(e));
+				System.out.println("client spawning ball "+e);
 			}
 		}
+	}
+	
+	@Override
+	public void start(){
+		super.start();
+		this.startNetwork();
 	}
 	
 	@Override
@@ -241,14 +248,12 @@ class MouseServer extends ServerGameplay<MouseEvent>{
 	@Override
 	public void onConnect(WrappedClient<MouseEvent> justConnected) {
 		synchronized (this.mouseBalls){
-			MouseBall o = new MouseBall(0,0);//spawn a new object when someone connects
+			MouseBall o = new MouseBall(20,20);//spawn a new object when someone connects
 			o.identifier = justConnected.identifier;
 			this.mouseBalls.add(o);
 	
 			System.out.println("new object, id "+o.identifier);
-			System.out.println("Server thinks is "+o.identifier);
 			MouseEvent e = new MouseEvent(o);
-			System.out.println(e.identifier);
 			this.network.dispatchEvent(e);
 		}
 	}

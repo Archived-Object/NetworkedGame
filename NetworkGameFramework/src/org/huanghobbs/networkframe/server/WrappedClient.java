@@ -25,16 +25,14 @@ public class WrappedClient<G extends GameEvent> {
 	public int identifier;
 	public boolean disconnected = false;
 	
-	public WrappedClient(Socket s) throws SocketException{
+	String fingerprint;
+	
+	public WrappedClient(Socket s, String hashedFingerprint) throws SocketException{
 		this.toClient=s;
 		this.toClient.setSoTimeout(0);/** blocking */
+		this.fingerprint=hashedFingerprint;
 		this.identifier=counter;
 		counter++;
-	}
-	
-	public void informClient() throws IOException {
-        this.toClient.getOutputStream().write(this.identifier);
-        this.toClient.getOutputStream().flush();
 	}
 	
 	/**
@@ -65,6 +63,7 @@ public class WrappedClient<G extends GameEvent> {
 	public boolean sendEvent(G event) {
 		try{
 			GameEventFactory.writeToStream(event,this.toClient.getOutputStream());
+			this.toClient.getOutputStream().flush();
 		} catch(IOException e){
 			System.out.println("cannot write event to outputstram");
 			
@@ -76,6 +75,10 @@ public class WrappedClient<G extends GameEvent> {
 			return true;
 		}
 		return false;
+	}
+
+	public void updateSocket(Socket newSocket) {
+		this.toClient=newSocket;
 	}
 
 }
