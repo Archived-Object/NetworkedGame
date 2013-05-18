@@ -151,8 +151,10 @@ public class ServerNetwork<G extends GameEvent>{
 	 * @throws IOException 
 	 */
 	public void handleEvent(G e, WrappedClient<G> c){
-		if(this.serverGameplay.handleEvent(e,c)){
-			this.dispatchEvent(e);
+		//checking if an event is illegal
+		//kick client if they commit too many illegal actions
+		if(!this.serverGameplay.handleEvent(e,c)){
+			c.illegalActions++;
 		}
 	}
 	

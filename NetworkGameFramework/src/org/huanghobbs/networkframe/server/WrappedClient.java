@@ -24,6 +24,7 @@ public class WrappedClient<G extends GameEvent> {
 	
 	public int identifier;
 	public boolean disconnected = false;
+	public int illegalActions = 0; //tracker for how many illegal actions the client has committed
 	
 	String fingerprint;
 	
@@ -48,7 +49,7 @@ public class WrappedClient<G extends GameEvent> {
 			return g;
 		} catch(IOException e){
 			System.err.println("cannot read event from client");
-			//e.printStackTrace();
+			e.printStackTrace();
 			return null;
 		}
 	}

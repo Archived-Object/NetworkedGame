@@ -98,8 +98,8 @@ public class ClientNetwork <G extends GameEvent>{
 	public void sendGameEvent(G evt){
 		try {
 			GameEventFactory.writeToStream(evt,this.socket.getOutputStream());
-		} catch (IOException e) {
-				System.err.println("ClientNetwork could not send GameEvent");
+		} catch (Exception e) {
+				System.err.println("ClientNetwork could not send GameEvent "+evt);
 				e.printStackTrace();
 			}
 	}

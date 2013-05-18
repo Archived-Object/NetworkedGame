@@ -49,7 +49,8 @@ public class ExampleNetworkGame {
 		public boolean handleEvent(IntGameEvent e, WrappedClient<IntGameEvent> c) {
 			this.recentDigit = e.value;
 			this.advanced=false;
-			return true;
+			network.dispatchEvent(e);//echo event to all clients
+			return true;//treat all events as valid
 		}
 		
 		@Override

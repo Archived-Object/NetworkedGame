@@ -33,16 +33,16 @@ public class MouseBall {
 
 	public void update(int elapsed){
 		//updating local prediction
-		this.xv += (this.xd-this.x)/70*elapsed/1000;
-		this.yv += (this.yd-this.y)/70*elapsed/1000;
+		this.xv += (this.xd-this.x)/100*elapsed/1000;
+		this.yv += (this.yd-this.y)/100*elapsed/1000;
 		
 		this.xv=this.xv*(1-(decay)*elapsed/1000);
 		this.yv=this.yv*(1-(decay)*elapsed/1000);
 		
-		this.x+=xv;
-		this.y+=yv;
-		this.xs+=xv;
-		this.ys+=yv;
+		this.x+=xv*elapsed/1000;
+		this.y+=yv*elapsed/1000;
+		this.xs+=xv*elapsed/1000;
+		this.ys+=yv*elapsed/1000;
 		
 		//correcting display to match server over time
 		this.x = this.x + (this.xs - this.x)*(correctionFactor)*elapsed/1000;

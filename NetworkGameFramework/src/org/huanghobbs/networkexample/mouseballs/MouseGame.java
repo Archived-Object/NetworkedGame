@@ -106,15 +106,16 @@ public class MouseGame extends BasicGame {
     	
     	new MouseEventFactory();
     	if(args.length==0){
-    		args = new String[] {"-sc"};
+    		args = new String[] {"-c","98.114.254.50"};
     	}
     	
     	if(args[0].equals("-s") || args[0].equals("-sc")  ){//run the server on -s command
+    		System.out.println("GOSERVER");
     		MouseServer server = new MouseServer(); 
         	server.start();							
     	}
     	if (args[0].equals("-c") || args[0].equals("-sc") ){
-
+    		System.out.println("GOCLIENT");
     		MouseClient client;
     		if(args[0].equals("-c") && args.length>1){
     	    	client = new MouseClient(args[1]);
@@ -220,6 +221,11 @@ class MouseServer extends ServerGameplay<MouseEvent>{
 	
 	static final float ballSpeed = 10F;
 	
+	public MouseServer(){
+		super();
+		this.TickTime=10;//super low tick time
+	}
+	
 	@Override
 	public boolean handleEvent(MouseEvent e, WrappedClient<MouseEvent> source) {
 		if(e.identifier==source.identifier && e.isPositionEvent){
@@ -232,7 +238,7 @@ class MouseServer extends ServerGameplay<MouseEvent>{
 				}
 			}
 		}
-		return false;
+		return true;//treat all events as valid
 	}
 	
 	@Override

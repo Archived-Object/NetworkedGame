@@ -16,7 +16,7 @@ import org.huanghobbs.networkframe.GameEvent;
 public abstract class ServerGameplay<G extends GameEvent>{
 	
 	/** Static variable to control game universe "tick" speed*/
-	protected static int universeTickTime = 30;
+	protected int TickTime = 30;
 	
 	/*things that are for this class only*/
 	protected ServerNetwork<G> network;
@@ -47,7 +47,7 @@ public abstract class ServerGameplay<G extends GameEvent>{
 		this.lastTick=System.currentTimeMillis();
 		
 		this.gameTimer = new Timer();
-		this.gameTimer.scheduleAtFixedRate(new TickTimer<G>(this), 0, universeTickTime);
+		this.gameTimer.scheduleAtFixedRate(new TickTimer<G>(this), 0, TickTime);
 	}
 	
 	
@@ -55,7 +55,8 @@ public abstract class ServerGameplay<G extends GameEvent>{
 	
 	/**
 	 * check if an incoming event is valid (allowed by game)
-	 * if it is valid, the event is processed (applied to game and redispatched)
+	 * if it is valid, parse the event and return true
+	 * otherwise, (return false), the serverNetwork will say that the client committed some illegal action
 	 * 
 	 * @param e the event that is to be checked/implemented
 	 * @return if the event was valid
