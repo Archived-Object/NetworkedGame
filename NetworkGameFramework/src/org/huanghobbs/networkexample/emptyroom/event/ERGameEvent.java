@@ -1,5 +1,6 @@
 package org.huanghobbs.networkexample.emptyroom.event;
 
+import org.huanghobbs.networkexample.emptyroom.EmptyRoom;
 import org.huanghobbs.networkexample.emptyroom.GameObject;
 import org.huanghobbs.networkframe.GameEvent;
 
@@ -17,6 +18,7 @@ public class ERGameEvent implements GameEvent{
 		EVENT_INTERACT=6;	// subject(int) target(int)
 	
 	public int eventType;
+	public long eventTime;//time of event, with respect to game time (milliseconds since beginning of game)
 	
 	public Object[] data; //varies depending on what type of event it is
 	
@@ -26,8 +28,12 @@ public class ERGameEvent implements GameEvent{
 	 * @param data the list of arguments to contain
 	 */
 	protected ERGameEvent(int type, Object[] data){
+		this(type, data, System.currentTimeMillis()-EmptyRoom.gameStart);
+	}
+	protected ERGameEvent(int type, Object[] data,long gameTime){
 		this.eventType=type;
 		this.data=data;
+		this.eventTime=gameTime;
 	}
 	
 	/**

@@ -18,6 +18,8 @@ public class EmptyRoom extends BasicGame{
 	EmptyRoomSimulation sim;
 	
 	public static ArrayList<String> messageQueue = new ArrayList<String> (0);
+
+	public static long gameStart;
 	
 	public EmptyRoom(String title, EmptyRoomSimulation sim) {
 		super(title);
@@ -70,9 +72,6 @@ public class EmptyRoom extends BasicGame{
 			messageQueue.add(msg);
 		}
 	}
-	
-	
-	
 	
 	
 	public static void main(String[] args) throws SlickException{
