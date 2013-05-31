@@ -37,7 +37,7 @@ public class EmptyRoomServer extends ServerGameplay<ERGameEvent>{
 				}
 				//else do not
 				else{
-					network.dispatchEvent(ERGameEvent.EventMessage( objects.get(source.identifier).name , msg ));
+					network.dispatchEvent(ERGameEvent.EventMessage( this.currentTime(), objects.get(source.identifier).name , msg ));
 				}
 				return true;
 				
@@ -60,7 +60,7 @@ public class EmptyRoomServer extends ServerGameplay<ERGameEvent>{
 				
 				this.objects.get(source.identifier).destx=newx;
 				this.objects.get(source.identifier).desty=newy;
-				network.dispatchEvent( ERGameEvent.EventUpdate( this.objects.get(source.identifier) ) );
+				network.dispatchEvent( ERGameEvent.EventUpdate( this.currentTime(), this.objects.get(source.identifier) ) );
 				return true;
 				
 			case (ERGameEvent.EVENT_INTERACT_C):
@@ -72,7 +72,7 @@ public class EmptyRoomServer extends ServerGameplay<ERGameEvent>{
 				}
 				//otherwise, allow interaction to happen
 				else{
-					network.dispatchEvent(ERGameEvent.EventInteract(source.identifier, targetID));
+					network.dispatchEvent(ERGameEvent.EventInteract( this.currentTime(), source.identifier, targetID));
 				}
 				return true;
 			
@@ -87,11 +87,10 @@ public class EmptyRoomServer extends ServerGameplay<ERGameEvent>{
 	 * elapsed milliseconds are stored in this.elapsed. (compensate for lag)
 	 */
 	@Override
-	public void tickUniverse(){
-		super.tickUniverse();
+	public void tickUniverse(long elapsed){
 		for(GameObject o:this.objects.values()){
-			o.update(this.elapsed);
-			network.dispatchEvent( ERGameEvent.EventUpdate(o) );
+			o.update(elapsed);
+			network.dispatchEvent( ERGameEvent.EventUpdate(this.currentTime(), o) );
 		}
 	}
 	
@@ -119,6 +118,7 @@ public class EmptyRoomServer extends ServerGameplay<ERGameEvent>{
 			);
 		network.dispatchEvent(
 			ERGameEvent.EventUpdate(
+				this.currentTime(),
 				this.objects.get(justConnected.identifier )
 			)
 		);

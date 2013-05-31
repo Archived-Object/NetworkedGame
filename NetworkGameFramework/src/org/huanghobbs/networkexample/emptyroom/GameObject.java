@@ -61,7 +61,7 @@ public class GameObject {
 		return (float) Math.sqrt( Math.pow(x-x2, 2)+Math.pow(y-y2, 2) );
 	}
 
-	public void update(int elapsed){
+	public void update(long elapsed){
 		//updating local prediction
 		float hyp = getDistance(this.x, this.y, destx, desty);
 		float xratio, yratio;

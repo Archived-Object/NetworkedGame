@@ -43,13 +43,9 @@ public class EmptyRoomSimulation extends ClientSimulation<ERGameEvent>{
 	}
 	
 	@Override
-	/**
-	 * updates all the game objects
-	 */
-	public void tickSimulation(){
-		super.tickSimulation();
+	public void tickSimulation(long elapsed){
 		for( GameObject o: objects.values()){
-			o.update(this.elapsed);
+			o.update(elapsed);
 		}
 	}
 	

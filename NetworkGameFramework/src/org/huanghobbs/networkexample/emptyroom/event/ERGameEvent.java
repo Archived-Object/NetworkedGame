@@ -1,10 +1,9 @@
 package org.huanghobbs.networkexample.emptyroom.event;
 
-import org.huanghobbs.networkexample.emptyroom.EmptyRoom;
 import org.huanghobbs.networkexample.emptyroom.GameObject;
 import org.huanghobbs.networkframe.GameEvent;
 
-public class ERGameEvent implements GameEvent{
+public class ERGameEvent extends GameEvent{
 	
 	//tag EVENT_*_C means this event is only sent from client to server, and the server figures out who it is.
 	
@@ -18,22 +17,13 @@ public class ERGameEvent implements GameEvent{
 		EVENT_INTERACT=6;	// subject(int) target(int)
 	
 	public int eventType;
-	public long eventTime;//time of event, with respect to game time (milliseconds since beginning of game)
 	
 	public Object[] data; //varies depending on what type of event it is
 	
-	/**
-	 * protected, holds arbitrary data as defined by the event type
-	 * @param type the type of event it is
-	 * @param data the list of arguments to contain
-	 */
-	protected ERGameEvent(int type, Object[] data){
-		this(type, data, System.currentTimeMillis()-EmptyRoom.gameStart);
-	}
-	protected ERGameEvent(int type, Object[] data,long gameTime){
+	protected ERGameEvent(long time, int type, Object[] data){
+		super(time);
 		this.eventType=type;
 		this.data=data;
-		this.eventTime=gameTime;
 	}
 	
 	/**
@@ -43,36 +33,36 @@ public class ERGameEvent implements GameEvent{
 	 * @param message
 	 * @return
 	 */
-	public static ERGameEvent EventMessage(String source, String message){
-		return new ERGameEvent( EVENT_MESSAGE, new Object[]{source,message});
+	public static ERGameEvent EventMessage(long time, String source, String message){
+		return new ERGameEvent( time, EVENT_MESSAGE, new Object[]{source,message});
 	}
 	
-	public static ERGameEvent EventMessageClient(String message){
-		return new ERGameEvent( EVENT_MESSAGE_C, new Object[]{message});
+	public static ERGameEvent EventMessageClient(long time, String message){
+		return new ERGameEvent( time, EVENT_MESSAGE_C, new Object[]{message});
 	}
 	
-	public static ERGameEvent EventUpdateClient(float destx, float desty){
-		return new ERGameEvent( EVENT_UPDATE_C, new Object[]{destx, desty});
+	public static ERGameEvent EventUpdateClient(long time, float destx, float desty){
+		return new ERGameEvent( time, EVENT_UPDATE_C, new Object[]{destx, desty});
 	}
 	
-	public static ERGameEvent EventUpdate(int subjectID, float x, float y, float destx, float desty){
-		return new ERGameEvent( EVENT_UPDATE, new Object[]{subjectID, x, y, destx, desty});
+	public static ERGameEvent EventUpdate(long time, int subjectID, float x, float y, float destx, float desty){
+		return new ERGameEvent( time, EVENT_UPDATE, new Object[]{subjectID, x, y, destx, desty});
 	}
 	
-	public static ERGameEvent EventUpdate(GameObject o){
-		return new  ERGameEvent( EVENT_UPDATE, new Object[]{o.id, o.x, o.y, o.destx, o.desty});
+	public static ERGameEvent EventUpdate(long time, GameObject o){
+		return new  ERGameEvent( time, EVENT_UPDATE, new Object[]{o.id, o.x, o.y, o.destx, o.desty});
 	}
 	
-	public static ERGameEvent EventDestroy(int subjectID){
-		return new ERGameEvent( EVENT_DESTROY, new Object[]{subjectID});
+	public static ERGameEvent EventDestroy(long time, int subjectID){
+		return new ERGameEvent( time, EVENT_DESTROY, new Object[]{subjectID});
 	}
 	
-	public static ERGameEvent EventInteractClient(int subjectID){
-		return new ERGameEvent( EVENT_INTERACT_C, new Object[]{subjectID});
+	public static ERGameEvent EventInteractClient(long time, int subjectID){
+		return new ERGameEvent( time, EVENT_INTERACT_C, new Object[]{subjectID});
 	}
 	
-	public static ERGameEvent EventInteract(int sourceID, int subjectID){
-		return new ERGameEvent( EVENT_INTERACT, new Object[]{sourceID, subjectID});
+	public static ERGameEvent EventInteract(long time, int sourceID, int subjectID){
+		return new ERGameEvent( time, EVENT_INTERACT, new Object[]{sourceID, subjectID});
 	}
 	
 	protected String getTypeName(){

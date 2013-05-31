@@ -9,6 +9,12 @@ package org.huanghobbs.networkframe;
  * @author Maxwell
  *
  */
-public interface GameEvent {
+public abstract class GameEvent {
+	
+	public long eventTime;
+	
+	public GameEvent(long gameTime){
+		this.eventTime=gameTime;
+	}
 	
 }

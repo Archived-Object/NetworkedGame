@@ -181,7 +181,7 @@ public class ClientNetwork <G extends GameEvent>{
 				if(e==null){
 					this.cleanStop();
 				} else{
-					client.simulation.handleEvent(e);
+					client.simulation.handleEventWrapped(e);
 				}
 			}
 		}

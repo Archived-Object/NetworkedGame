@@ -1,9 +1,11 @@
 package org.huanghobbs.networkframe.server;
 
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import org.huanghobbs.networkframe.GameEvent;
+import org.huanghobbs.networkframe.GameTimer;
 
 
 /**
@@ -13,7 +15,7 @@ import org.huanghobbs.networkframe.GameEvent;
  * @author Maxwell
  *
  */
-public abstract class ServerGameplay<G extends GameEvent>{
+public abstract class ServerGameplay<G extends GameEvent> extends GameTimer{
 	
 	/** Static variable to control game universe "tick" speed*/
 	protected int TickTime = 30;
@@ -24,12 +26,13 @@ public abstract class ServerGameplay<G extends GameEvent>{
 	protected boolean tickingFlag = false;
 	
 	/** convenience variable, elapsed milliseconds since last tick*/
-	protected int elapsed = 100;//failsafe, in case someone doesn't call super.tickUniverse before using this.elapsed.
-	protected long lastTick;
+	protected long lastTick=0;
 	
 	/* communicate with outside this class*/
 	public boolean initialized = false;
 
+	protected LinkedList<GameEvent> eventRecord = new LinkedList<GameEvent>();
+	
 	/**
 	 * creates a new ServerGameplay and ServerNetwork, then associates the two.
 	 */
@@ -38,13 +41,13 @@ public abstract class ServerGameplay<G extends GameEvent>{
 		this.network.setGame(this);
 	}
 	
+	@Override
 	public void start(){
+		super.start();
 		if(!this.network.started){
 			this.network.start();
 		}
 		this.initialized=true;
-
-		this.lastTick=System.currentTimeMillis();
 		
 		this.gameTimer = new Timer();
 		this.gameTimer.scheduleAtFixedRate(new TickTimer<G>(this), 0, TickTime);
@@ -52,6 +55,13 @@ public abstract class ServerGameplay<G extends GameEvent>{
 	
 	
 	//GAMEPLAY content
+	
+
+	public boolean handleEventWrapped(G e, WrappedClient<G> source){
+		synchronized(this.eventRecord){
+			return handleEvent(e,source);
+		}
+	}
 	
 	/**
 	 * check if an incoming event is valid (allowed by game)
@@ -69,10 +79,13 @@ public abstract class ServerGameplay<G extends GameEvent>{
 	 * (does the elapsed calculations)
 	 */
 	public void tickUniverse(){
-		long p =System.currentTimeMillis();
-		this.elapsed = (int)(p-this.lastTick);
+		long p = this.currentTime();
+		long elapsed = (int)(p-this.lastTick);
 		this.lastTick = p;
+		tickUniverse(elapsed);
 	}
+	
+	public abstract void tickUniverse(long elapsed);
 
 	public abstract void onConnect(WrappedClient<G> justConnected);
 	public abstract void onDisconnect(WrappedClient<G> justDropped);

@@ -22,19 +22,23 @@ public class ERGameEventFactory extends GameEventFactory{
 			throws IOException {
 		ObjectInputStream ois = new ObjectInputStream(inputStream);
 		
+		long evtTime = ois.readLong();
 		switch(ois.readInt()){
 			case (ERGameEvent.EVENT_MESSAGE_C):
-				return ERGameEvent.EventMessageClient(ois.readUTF());
+				return ERGameEvent.EventMessageClient(evtTime, ois.readUTF());
 			case (ERGameEvent.EVENT_MESSAGE):
 				return ERGameEvent.EventMessage(
+						evtTime, 
 						ois.readUTF(),
 						ois.readUTF());
 			case (ERGameEvent.EVENT_UPDATE_C):
 				return  ERGameEvent.EventUpdateClient(
-						 ois.readFloat(),
-						 ois.readFloat() );
+						evtTime, 
+						ois.readFloat(),
+						ois.readFloat() );
 			case (ERGameEvent.EVENT_UPDATE):
 				return ERGameEvent.EventUpdate(
+						evtTime, 
 						ois.readInt(),
 						ois.readFloat(), 
 						ois.readFloat(),
@@ -42,12 +46,15 @@ public class ERGameEventFactory extends GameEventFactory{
 						ois.readFloat() );
 			case (ERGameEvent.EVENT_DESTROY):
 				return ERGameEvent.EventDestroy(
+						evtTime, 
 						ois.readInt() );
 			case (ERGameEvent.EVENT_INTERACT_C):
 				return ERGameEvent.EventInteractClient(
+						evtTime, 
 						ois.readInt() );
 			case (ERGameEvent.EVENT_INTERACT):
 				return ERGameEvent.EventInteract(
+						evtTime, 
 						ois.readInt(),
 						ois.readInt() );
 			default:
@@ -60,7 +67,8 @@ public class ERGameEventFactory extends GameEventFactory{
 			throws IOException {
 		ERGameEvent e = (ERGameEvent)g;
 		ObjectOutputStream oos = new ObjectOutputStream(outputStream);
-		
+
+		oos.writeLong(e.eventTime);
 		oos.writeInt(e.eventType);
 		
 		switch(e.eventType){

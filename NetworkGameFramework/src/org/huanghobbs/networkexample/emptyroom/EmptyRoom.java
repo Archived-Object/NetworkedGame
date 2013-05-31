@@ -40,6 +40,7 @@ public class EmptyRoom extends BasicGame{
 			//TODO looking for clicking on people
 			sim.network.sendGameEvent(
 					ERGameEvent.EventUpdateClient(
+							sim.currentTime(),
 							i.getMouseX(),
 							i.getMouseY()
 						)

@@ -1,10 +1,12 @@
 package org.huanghobbs.networkframe.client;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import org.huanghobbs.networkframe.GameEvent;
+import org.huanghobbs.networkframe.GameTimer;
 /**
  * This handles dead reckoning. (simulating based on last update from the server)
  * This also handles recording and dispatching player actions as GameEvents
@@ -15,31 +17,34 @@ import org.huanghobbs.networkframe.GameEvent;
  * @author Maxwell
  *
  */
-public abstract class ClientSimulation<G extends GameEvent>{
+public abstract class ClientSimulation<G extends GameEvent> extends GameTimer{
 
 	/** Static variable to control game simulation "tick" speed*/
-	protected static int simulationTickTime = 30;
+	protected int tickTime = 30;
 	
 	/** The networking half that the simulated client recieves data from */
 	public ClientNetwork<G> network;
 	
 	/** convenience variables, elapsed milliseconds since last tick*/
-	protected int elapsed = 100;//failsafe, in case someone doesn't call super.tickUniverse before using this.elapsed.
 	protected long lastTick;
 	protected boolean manualTick = false;
 	
 	/** timer*/
 	protected Timer simulationTimer = new Timer();
 	
+	protected LinkedList<GameEvent> eventRecord = new LinkedList<GameEvent>();
+	
 	public ClientSimulation(String targetAddress){
 		this.network = new ClientNetwork<G>(targetAddress);
 		this.network.setSimulation(this);
 	}
 	
+	@Override
 	public void start(){
-		this.lastTick=System.currentTimeMillis();
+		super.start();
+		this.lastTick=0;
 		if(!manualTick){
-			this.simulationTimer.scheduleAtFixedRate(new SimulationTicker<G>(this), 0, simulationTickTime);
+			this.simulationTimer.scheduleAtFixedRate(new SimulationTicker<G>(this), 0, tickTime);
 		}
 	}
 	
@@ -57,16 +62,28 @@ public abstract class ClientSimulation<G extends GameEvent>{
 	}
 	
 	public void tickSimulation(){
-		long p =System.currentTimeMillis();
-		this.elapsed = (int)(p-this.lastTick);
-		this.lastTick = p;
+		synchronized(this.eventRecord){//makes sure it doesn't overlap with handleEvent
+			long p = this.currentTime();
+			long elapsed = (int)(p-this.lastTick);
+			this.lastTick = p;
+			tickSimulation(elapsed);
+		}
+	}
+	
+
+	public abstract void tickSimulation(long elapsedMillis);
+	
+	public void handleEventWrapped(G e){
+		synchronized(this.eventRecord){
+			this.handleEvent(e);
+		}
 	}
 	
 	/**
 	 * abstract method
 	 * handle a GameEvent (update the simulation and apply dead-reckoning to figure out what should be going on)
 	 */
-	public abstract void handleEvent(G e);
+	protected abstract void handleEvent(G e);
 
 	/**
 	 * abstract method

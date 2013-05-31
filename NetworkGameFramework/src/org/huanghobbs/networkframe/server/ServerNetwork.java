@@ -153,7 +153,7 @@ public class ServerNetwork<G extends GameEvent>{
 	public void handleEvent(G e, WrappedClient<G> c){
 		//checking if an event is illegal
 		//kick client if they commit too many illegal actions
-		if(!this.serverGameplay.handleEvent(e,c)){
+		if(!this.serverGameplay.handleEventWrapped(e,c)){
 			c.illegalActions++;
 		}
 	}
