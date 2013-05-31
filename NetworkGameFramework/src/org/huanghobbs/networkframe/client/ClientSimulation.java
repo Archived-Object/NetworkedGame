@@ -26,12 +26,10 @@ public abstract class ClientSimulation<G extends GameEvent> extends GameTimer{
 	public ClientNetwork<G> network;
 	
 	/** convenience variables, elapsed milliseconds since last tick*/
-	protected long lastTick;
 	protected boolean manualTick = false;
 	
 	/** timer*/
 	protected Timer simulationTimer = new Timer();
-	
 	protected LinkedList<GameEvent> eventRecord = new LinkedList<GameEvent>();
 	
 	public ClientSimulation(String targetAddress){
@@ -70,12 +68,45 @@ public abstract class ClientSimulation<G extends GameEvent> extends GameTimer{
 		}
 	}
 	
+	/**
+	 * abstract method
+	 * 
+	 * must set lastTick as well
+	 * @param targetTime the time to roll back 
+	 */
+	public abstract void rollbackTo(long targetTime);
+	
+	/**
+	 * ticks the game forward, setting lastTick at the end
+	 * @param targetGameTime the time to tick to
+	 */
+	public void tickForwardTo(long targetGameTime){//TODO recorded events
+		long diff = targetGameTime-lastTick;
+		for( int i=0; i<diff/this.tickTime; i++){
+			this.tickSimulation(this.tickTime);
+		}
+		if(diff%this.tickTime!=0){
+			this.tickSimulation(diff%this.tickTime);
+		}
+		this.lastTick = targetGameTime;
+	}
 
 	public abstract void tickSimulation(long elapsedMillis);
 	
 	public void handleEventWrapped(G e){
 		synchronized(this.eventRecord){
-			this.handleEvent(e);
+			if(e.eventTime<this.lastTick &&
+					(this.lastTick-e.eventTime<maxRollback || maxRollback==-1) ){
+				long currentTime = this.lastTick;//if you can, roll back and apply the event from the server, then roll forward again
+				this.rollbackTo(e.eventTime);
+				this.handleEvent(e);
+				this.tickForwardTo(currentTime);
+			}
+			else if (e.eventTime>this.lastTick){
+				//always trust the server. (roll forward to match server time)
+				this.tickForwardTo(e.eventTime);
+				this.handleEvent(e);
+			}
 		}
 	}
 	

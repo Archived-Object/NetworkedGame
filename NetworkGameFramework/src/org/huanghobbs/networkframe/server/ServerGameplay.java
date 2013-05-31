@@ -18,7 +18,7 @@ import org.huanghobbs.networkframe.GameTimer;
 public abstract class ServerGameplay<G extends GameEvent> extends GameTimer{
 	
 	/** Static variable to control game universe "tick" speed*/
-	protected int TickTime = 30;
+	protected int tickTime = 30;
 	
 	/*things that are for this class only*/
 	protected ServerNetwork<G> network;
@@ -50,7 +50,7 @@ public abstract class ServerGameplay<G extends GameEvent> extends GameTimer{
 		this.initialized=true;
 		
 		this.gameTimer = new Timer();
-		this.gameTimer.scheduleAtFixedRate(new TickTimer<G>(this), 0, TickTime);
+		this.gameTimer.scheduleAtFixedRate(new TickTimer<G>(this), 0, tickTime);
 	}
 	
 	
@@ -59,8 +59,21 @@ public abstract class ServerGameplay<G extends GameEvent> extends GameTimer{
 
 	public boolean handleEventWrapped(G e, WrappedClient<G> source){
 		synchronized(this.eventRecord){
-			return handleEvent(e,source);
+			if(e.eventTime<this.lastTick &&
+					(this.lastTick-e.eventTime<maxRollback || maxRollback==-1) ){
+				long currentTime = this.lastTick;//if you can, roll back and apply the event from the server, then roll forward again
+				this.rollbackTo(e.eventTime);
+				boolean x = this.handleEvent(e,source);
+				this.tickForwardTo(currentTime);
+				return x;
+			}
+			else if (e.eventTime>this.lastTick && e.eventTime<=this.currentTime()){
+				//only trust client to roll forward if the server hasn't updated in a whole)
+				this.tickForwardTo(e.eventTime);
+				return this.handleEvent(e,source);
+			}
 		}
+		return false;
 	}
 	
 	/**
@@ -72,6 +85,18 @@ public abstract class ServerGameplay<G extends GameEvent> extends GameTimer{
 	 * @return if the event was valid
 	 */
 	public abstract boolean handleEvent(G e, WrappedClient<G> source);
+	
+
+	public abstract void rollbackTo(long targetGameTime);
+	public void tickForwardTo(long targetGameTime){//TODO recorded events
+		long diff = targetGameTime-lastTick;
+		for( int i=0; i<diff/this.tickTime; i++){
+			this.tickUniverse(this.tickTime);
+		}
+		if(diff%tickTime!=0){
+			this.tickUniverse(diff%this.tickTime);
+		}
+	}
 	
 	/**
 	 * advances the universe of the game.

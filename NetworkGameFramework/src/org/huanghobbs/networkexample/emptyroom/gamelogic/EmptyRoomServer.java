@@ -22,7 +22,7 @@ public class EmptyRoomServer extends ServerGameplay<ERGameEvent>{
 	
 	public EmptyRoomServer(){
 		super();
-		this.TickTime = 500;
+		this.tickTime = 500;
 	}
 	
 	@Override
