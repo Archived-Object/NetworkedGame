@@ -23,6 +23,8 @@ public class EmptyRoomServer extends ServerGameplay<ERGameEvent>{
 	public EmptyRoomServer(){
 		super();
 		this.tickTime = 500;
+		this.maxRollback = 2000;
+		
 	}
 	
 	@Override

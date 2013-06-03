@@ -6,6 +6,8 @@ import java.util.TimerTask;
 
 import org.huanghobbs.networkframe.GameEvent;
 import org.huanghobbs.networkframe.GameTimer;
+import org.huanghobbs.networkframe.SaveState;
+import org.huanghobbs.networkframe.SaveStateFactory;
 
 
 /**
@@ -27,6 +29,7 @@ public abstract class ServerGameplay<G extends GameEvent> extends GameTimer{
 	
 	/** convenience variable, elapsed milliseconds since last tick*/
 	protected long lastTick=0;
+	protected SaveState lastBackup;
 	
 	/* communicate with outside this class*/
 	public boolean initialized = false;
@@ -87,7 +90,11 @@ public abstract class ServerGameplay<G extends GameEvent> extends GameTimer{
 	public abstract boolean handleEvent(G e, WrappedClient<G> source);
 	
 
-	public abstract void rollbackTo(long targetGameTime);
+	public void rollbackTo(long targetGameTime){
+		lastBackup.restore();
+		tickForwardTo(targetGameTime);
+	}
+	
 	public void tickForwardTo(long targetGameTime){//TODO recorded events
 		long diff = targetGameTime-lastTick;
 		for( int i=0; i<diff/this.tickTime; i++){
@@ -107,7 +114,12 @@ public abstract class ServerGameplay<G extends GameEvent> extends GameTimer{
 		long p = this.currentTime();
 		long elapsed = (int)(p-this.lastTick);
 		this.lastTick = p;
+		
 		tickUniverse(elapsed);
+		if(this.lastBackup.gameTime<=this.lastTick-this.maxRollback+this.tickTime){
+			this.lastBackup= SaveStateFactory.makeServerState(this);
+			//TODO clearing saved game events
+		}
 	}
 	
 	public abstract void tickUniverse(long elapsed);

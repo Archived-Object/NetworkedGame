@@ -7,6 +7,8 @@ import java.util.TimerTask;
 
 import org.huanghobbs.networkframe.GameEvent;
 import org.huanghobbs.networkframe.GameTimer;
+import org.huanghobbs.networkframe.SaveState;
+import org.huanghobbs.networkframe.SaveStateFactory;
 /**
  * This handles dead reckoning. (simulating based on last update from the server)
  * This also handles recording and dispatching player actions as GameEvents
@@ -30,7 +32,8 @@ public abstract class ClientSimulation<G extends GameEvent> extends GameTimer{
 	
 	/** timer*/
 	protected Timer simulationTimer = new Timer();
-	protected LinkedList<GameEvent> eventRecord = new LinkedList<GameEvent>();
+	protected LinkedList<G> eventRecord = new LinkedList<G>();
+	SaveState lastBackup;
 	
 	public ClientSimulation(String targetAddress){
 		this.network = new ClientNetwork<G>(targetAddress);
@@ -44,6 +47,7 @@ public abstract class ClientSimulation<G extends GameEvent> extends GameTimer{
 		if(!manualTick){
 			this.simulationTimer.scheduleAtFixedRate(new SimulationTicker<G>(this), 0, tickTime);
 		}
+		this.lastBackup=SaveStateFactory.makeClientState(this);
 	}
 	
 	/**
@@ -65,6 +69,16 @@ public abstract class ClientSimulation<G extends GameEvent> extends GameTimer{
 			long elapsed = (int)(p-this.lastTick);
 			this.lastTick = p;
 			tickSimulation(elapsed);
+			if(this.lastBackup.gameTime<=this.lastTick-this.maxRollback+this.tickTime){
+				//creates a more recent save state
+				this.lastBackup= SaveStateFactory.makeClientState(this);
+				//clears out saved game events that are expired now
+				for( G evt: this.eventRecord){
+					if(evt.eventTime<this.lastBackup.gameTime){
+						this.eventRecord.pollFirst();
+					}
+				}
+			}
 		}
 	}
 	
@@ -74,7 +88,10 @@ public abstract class ClientSimulation<G extends GameEvent> extends GameTimer{
 	 * must set lastTick as well
 	 * @param targetTime the time to roll back 
 	 */
-	public abstract void rollbackTo(long targetTime);
+	public void rollbackTo(long targetGameTime){
+		lastBackup.restore();
+		tickForwardTo(targetGameTime);
+	}
 	
 	/**
 	 * ticks the game forward, setting lastTick at the end
@@ -99,7 +116,7 @@ public abstract class ClientSimulation<G extends GameEvent> extends GameTimer{
 					(this.lastTick-e.eventTime<maxRollback || maxRollback==-1) ){
 				long currentTime = this.lastTick;//if you can, roll back and apply the event from the server, then roll forward again
 				this.rollbackTo(e.eventTime);
-				this.handleEvent(e);
+				//TODO add it to the events queue
 				this.tickForwardTo(currentTime);
 			}
 			else if (e.eventTime>this.lastTick){
