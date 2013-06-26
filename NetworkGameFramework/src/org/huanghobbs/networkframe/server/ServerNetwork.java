@@ -16,7 +16,8 @@ import org.huanghobbs.networkframe.GameEvent;
 public class ServerNetwork<G extends GameEvent>{
 	
 	/**Static behavior variables*/
-	protected static final int port = 1337;
+	public static final int port = 1338;
+	
 	protected static final int maxclients = 5;
 	protected static final int upkeepTimer = 1000;
 	protected static final int eventTimer = 100;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.huanghobbs.networkexample.emptyroom.event.ERGameEvent;
 import org.huanghobbs.networkexample.emptyroom.event.ERGameEventFactory;
+import org.huanghobbs.networkexample.emptyroom.event.ERSaveStateFactory;
 import org.huanghobbs.networkexample.emptyroom.gamelogic.EmptyRoomServer;
 import org.huanghobbs.networkexample.emptyroom.gamelogic.EmptyRoomSimulation;
 import org.newdawn.slick.AppGameContainer;
@@ -78,6 +79,7 @@ public class EmptyRoom extends BasicGame{
 	public static void main(String[] args) throws SlickException{
 		//establish game event factory
 		new ERGameEventFactory();
+		new ERSaveStateFactory();
     	
 		if(args.length==0){
     		args = new String[] {"-sc"};

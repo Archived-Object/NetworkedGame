@@ -44,6 +44,7 @@ public abstract class ClientSimulation<G extends GameEvent> extends GameTimer{
 	public void start(){
 		super.start();
 		this.lastTick=0;
+		this.lastBackup=SaveStateFactory.makeClientState(this);
 		if(!manualTick){
 			this.simulationTimer.scheduleAtFixedRate(new SimulationTicker<G>(this), 0, tickTime);
 		}

@@ -17,7 +17,7 @@ public class EmptyRoomServer extends ServerGameplay<ERGameEvent>{
 	
 	protected Random random = new Random();
 	
-	protected HashMap<Integer,GameObject> objects = new HashMap<Integer,GameObject>();
+	public HashMap<Integer,GameObject> objects = new HashMap<Integer,GameObject>();
 	
 	
 	public EmptyRoomServer(){

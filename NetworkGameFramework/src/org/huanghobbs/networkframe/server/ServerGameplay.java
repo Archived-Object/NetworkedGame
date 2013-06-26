@@ -51,7 +51,8 @@ public abstract class ServerGameplay<G extends GameEvent> extends GameTimer{
 			this.network.start();
 		}
 		this.initialized=true;
-		
+
+		this.lastBackup=SaveStateFactory.makeServerState(this);
 		this.gameTimer = new Timer();
 		this.gameTimer.scheduleAtFixedRate(new TickTimer<G>(this), 0, tickTime);
 	}

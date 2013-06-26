@@ -11,6 +11,7 @@ import java.util.Random;
 
 import org.huanghobbs.networkframe.GameEvent;
 import org.huanghobbs.networkframe.GameEventFactory;
+import org.huanghobbs.networkframe.server.ServerNetwork;
 
 
 /**
@@ -24,9 +25,6 @@ import org.huanghobbs.networkframe.GameEventFactory;
  *
  */
 public class ClientNetwork <G extends GameEvent>{
-	
-	/**Static behavior variables*/
-	protected static final int port = 1337;
 	
 	/**the simulation that the gameEvents coming in/out of this govern*/
 	protected ClientSimulation<G> simulation;
@@ -106,7 +104,7 @@ public class ClientNetwork <G extends GameEvent>{
 	
 	public void start() throws IOException{
 		this.socket = new Socket();
-		this.socket.connect( new InetSocketAddress(address, port) );
+		this.socket.connect( new InetSocketAddress(address, ServerNetwork.port) );
 		this.socket.setSoTimeout(0);
 		
 		ObjectOutputStream oos = new ObjectOutputStream(this.socket.getOutputStream());
